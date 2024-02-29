@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Resources\TasksResources;
 use App\Models\Task;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class TasksController extends Controller
 {
@@ -23,10 +24,32 @@ class TasksController extends Controller
     public function store(Request $request)
     {
         $task = new Task();
-        $task->name = $request->input('name');
-        $task->status = $request->input('status');
-        $task->save();
-        return TasksResources::collection(Task::all());
+        $validator = Validator::make(
+            $request->all(),
+            [
+                'name' => 'required',
+                'status' => 'required'
+            ],
+            [
+                'name' => 'Поля Имя задачи не можеть быть пустим!',
+                'status' => 'Поля Статус не можеть быть пустим!',
+            ]
+        );
+        if ($validator->fails()) {
+            return [
+                'code' => 500,
+                'message' => $validator->errors()
+            ];
+        } else {
+            $task->create([
+                'name' => $request->name,
+                'status' => $request->status
+            ]);
+            return [
+                'code' => 200,
+                'message' => 'Запись успешно добавлено'
+            ];
+        }
     }
 
     /**
@@ -34,14 +57,14 @@ class TasksController extends Controller
      */
     public function show(string $id)
     {
-        $task = Task::find($id);
-        if (empty($task)) {
+        $task = Task::where('id', '=', $id);
+        if (count($task->get()) < 1) {
             return [
                 'code' => 404,
                 'message' => 'Задача не найдено!'
             ];
         } else {
-            return $task;
+            return TasksResources::collection($task->get());
         }
     }
 
@@ -68,7 +91,7 @@ class TasksController extends Controller
         }
     }
 
-    /**
+    /**@return array{code: int, message: string}
      * Remove the specified resource from storage.
      */
     public function destroy(string $id)
@@ -88,13 +111,18 @@ class TasksController extends Controller
         }
     }
 
+    /**
+     * @param $startDate
+     * @param $endDate
+     * @return array
+     */
     public function sortByDate($startDate, $endDate)
     {
         $task = Task::whereBetween('created_at', ["$startDate", "$endDate"]);
         if (count($task->get()) > 0) {
             return [
                 'code' => 200,
-                'data' => $task->get()
+                'data' => TasksResources::collection($task->get())
             ];
         } else {
             return [
@@ -104,13 +132,17 @@ class TasksController extends Controller
         }
     }
 
+    /**
+     * @param $status
+     * @return array
+     */
     public function sortByStatus($status)
     {
         $task = Task::where('status', '=', $status);
         if (count($task->get()) > 0) {
             return [
                 'code' => 200,
-                'data' => $task->get()
+                'data' => TasksResources::collection($task->get())
             ];
         } else {
             return [
@@ -118,5 +150,10 @@ class TasksController extends Controller
                 'message' => 'Задача не найдено!'
             ];
         }
+    }
+
+    public function lastId()
+    {
+        return $task = Task::latest()->first()->id;
     }
 }
