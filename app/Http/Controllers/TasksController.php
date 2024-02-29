@@ -24,8 +24,7 @@ class TasksController extends Controller
     public function store(Request $request)
     {
         $task = new Task();
-        $validator = Validator::make(
-            $request->all(),
+        $validator = Validator::make($request->all(),
             [
                 'name' => 'required',
                 'status' => 'required'
