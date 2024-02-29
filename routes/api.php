@@ -25,3 +25,4 @@ Route::resources([
 
 Route::post('/sortByDate/{startDate}/{endDate}', [TasksController::class, 'sortByDate']);
 Route::post('/sortByStatus/{status}/', [TasksController::class, 'sortByStatus']);
+Route::get('/lastId', [TasksController::class, 'lastId']);

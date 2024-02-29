@@ -30,8 +30,8 @@ class TasksController extends Controller
                 'status' => 'required'
             ],
             [
-                'name'=>'Поля Имя задачи не можеть быть пустим!',
-                'status'=>'Поля Статус не можеть быть пустим!',
+                'name' => 'Поля Имя задачи не можеть быть пустим!',
+                'status' => 'Поля Статус не можеть быть пустим!',
             ]
         );
         if ($validator->fails()) {
@@ -56,14 +56,14 @@ class TasksController extends Controller
      */
     public function show(string $id)
     {
-        $task = Task::find($id);
-        if (empty($task)) {
+        $task = Task::where('id', '=', $id);
+        if (count($task->get()) < 1) {
             return [
                 'code' => 404,
                 'message' => 'Задача не найдено!'
             ];
         } else {
-            return $task;
+            return TasksResources::collection($task->get());
         }
     }
 
@@ -121,7 +121,7 @@ class TasksController extends Controller
         if (count($task->get()) > 0) {
             return [
                 'code' => 200,
-                'data' => $task->get()
+                'data' => TasksResources::collection($task->get())
             ];
         } else {
             return [
@@ -141,7 +141,7 @@ class TasksController extends Controller
         if (count($task->get()) > 0) {
             return [
                 'code' => 200,
-                'data' => $task->get()
+                'data' => TasksResources::collection($task->get())
             ];
         } else {
             return [
@@ -149,5 +149,10 @@ class TasksController extends Controller
                 'message' => 'Задача не найдено!'
             ];
         }
+    }
+
+    public function lastId()
+    {
+        return $task = Task::latest()->first()->id;
     }
 }
