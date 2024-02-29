@@ -18,9 +18,10 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
-Route::get('/', [TasksController::class, 'index']);
+
 Route::resources([
     '/tasks' => TasksController::class
 ]);
+
 Route::post('/sortByDate/{startDate}/{endDate}', [TasksController::class, 'sortByDate']);
 Route::post('/sortByStatus/{status}/', [TasksController::class, 'sortByStatus']);

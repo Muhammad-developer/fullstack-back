@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Resources\TasksResources;
 use App\Models\Task;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class TasksController extends Controller
 {
@@ -23,10 +24,31 @@ class TasksController extends Controller
     public function store(Request $request)
     {
         $task = new Task();
-        $task->name = $request->input('name');
-        $task->status = $request->input('status');
-        $task->save();
-        return TasksResources::collection(Task::all());
+        $validator = Validator::make($request->all(),
+            [
+                'name' => 'required',
+                'status' => 'required'
+            ],
+            [
+                'name'=>'Поля Имя задачи не можеть быть пустим!',
+                'status'=>'Поля Статус не можеть быть пустим!',
+            ]
+        );
+        if ($validator->fails()) {
+            return [
+                'code' => 500,
+                'message' => $validator->errors()
+            ];
+        } else {
+            $task->create([
+                'name' => $request->name,
+                'status' => $request->status
+            ]);
+            return [
+                'code' => 200,
+                'message' => 'Запись успешно добавлено'
+            ];
+        }
     }
 
     /**
@@ -68,7 +90,7 @@ class TasksController extends Controller
         }
     }
 
-    /**
+    /**@return array{code: int, message: string}
      * Remove the specified resource from storage.
      */
     public function destroy(string $id)
@@ -88,6 +110,11 @@ class TasksController extends Controller
         }
     }
 
+    /**
+     * @param $startDate
+     * @param $endDate
+     * @return array
+     */
     public function sortByDate($startDate, $endDate)
     {
         $task = Task::whereBetween('created_at', ["$startDate", "$endDate"]);
@@ -104,6 +131,10 @@ class TasksController extends Controller
         }
     }
 
+    /**
+     * @param $status
+     * @return array
+     */
     public function sortByStatus($status)
     {
         $task = Task::where('status', '=', $status);
